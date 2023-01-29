@@ -1,4 +1,5 @@
 from dataclasses import dataclass
+from typing import Type
 
 
 @dataclass
@@ -11,19 +12,19 @@ class InfoMessage:
     speed: float
     calories: float
 
-    phrase_abt_training_type: str = 'Тип тренировки'
-    phrase_abt_duration: str = 'Длительность'
-    phrase_abt_distance: str = 'Дистанция'
-    phrase_abt_mean_speed: str = 'Ср. скорость'
-    phrase_abt_calories: str = 'Потрачено ккал'
+    text_get_message: str = ('Тип тренировки: {training_type}; '
+                             'Длительность: {duration:.3f} ч.; '
+                             'Дистанция: {distance:.3f} км; '
+                             'Ср. скорость: {speed:.3f} км/ч; '
+                             'Потрачено ккал: {calories:.3f}.')
 
     def get_message(self) -> str:
         """Получение информационного сообщения о тренировке."""
-        return (f'{self.phrase_abt_training_type}: {self.training_type}; '
-                f'{self.phrase_abt_duration}: {self.duration:0.3f} ч.; '
-                f'{self.phrase_abt_distance}: {self.distance:0.3f} км; '
-                f'{self.phrase_abt_mean_speed}: {self.speed:0.3f} км/ч; '
-                f'{self.phrase_abt_calories}: {self.calories:0.3f}.')
+        return self.text_get_message.format(training_type=self.training_type,
+                                            duration=self.duration,
+                                            distance=self.distance,
+                                            speed=self.speed,
+                                            calories=self.calories)
 
 
 class Training:
@@ -52,7 +53,7 @@ class Training:
 
     def get_spent_calories(self) -> float:
         """Получить количество затраченных калорий."""
-        raise NotImplementedError(f'Определите run в '
+        raise NotImplementedError(f'Определите get_spent_calories в '
                                   f'{self.__class__.__name__}!')
 
     def show_training_info(self) -> InfoMessage:
@@ -143,14 +144,14 @@ class Swimming(Training):
 
 def read_package(workout_type: str, data: list) -> Training:
     """Прочитать данные полученные от датчиков."""
-    types_of_training = {'SWM': Swimming,
-                         'RUN': Running,
-                         'WLK': SportsWalking
-                         }
+    types_of_training: dict[str, Type[Training]] = {'SWM': Swimming,
+                                                    'RUN': Running,
+                                                    'WLK': SportsWalking
+                                                    }
     if workout_type in types_of_training:
         return types_of_training[workout_type](*data)
-    raise TypeError(f'Ожидались следующие типы тренировки: SWM, RUN or WLK. '
-                    f'Получено: "{workout_type}"')
+    raise ValueError(f'Ожидались следующие типы тренировки: SWM, RUN or WLK. '
+                     f'Получено: "{workout_type}"')
 
 
 def main(training: Training) -> None:
@@ -165,7 +166,6 @@ if __name__ == '__main__':
         ('RUN', [15000, 1, 75]),
         ('WLK', [9000, 1, 75, 180]),
     ]
-
     for workout_type, data in packages:
         training = read_package(workout_type, data)
         main(training)
